@@ -13,10 +13,19 @@ const (
 	Saturday
 )
 
+var days = [...]string{
+	"Sunday", "Monday", "Tuesday",
+	"Wednesday", "Thursday", "Friday",
+	"Saturday",
+}
+
 func (d Weekday) String() string {
-	return "" // TODO
+	if d < Sunday || d > Saturday {
+		return "Unknown"
+	}
+	return days[d]
 }
 
 func (d Weekday) IsWeekend() bool {
-	return false // TODO
+	return d == Saturday || d == Sunday
 }
