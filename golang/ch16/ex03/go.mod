@@ -1,0 +1,3 @@
+module ch16/ex03
+
+go 1.26.4
