@@ -3,6 +3,7 @@ package todoapi
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -54,6 +55,60 @@ func (a *API) createTodo(w http.ResponseWriter, r *http.Request) {
 	newTodo := a.store.Create(todo.Title)
 	writeJSON(w, http.StatusCreated, newTodo)
 }
-func (a *API) getTodo(w http.ResponseWriter, r *http.Request)    { notImplemented(w) }
-func (a *API) updateTodo(w http.ResponseWriter, r *http.Request) { notImplemented(w) }
-func (a *API) deleteTodo(w http.ResponseWriter, r *http.Request) { notImplemented(w) }
+func (a *API) getTodo(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	todo, err := a.store.Get(id)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "todo not found")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, todo)
+}
+func (a *API) updateTodo(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	var todo Todo
+	err = json.NewDecoder(r.Body).Decode(&todo)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+
+	if strings.TrimSpace(todo.Title) == "" {
+		writeError(w, http.StatusBadRequest, "title is required")
+		return
+	}
+
+	todo, err = a.store.Update(id, todo.Title, true)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "todo not found")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, todo)
+}
+func (a *API) deleteTodo(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	err = a.store.Delete(id)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "todo not found")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
