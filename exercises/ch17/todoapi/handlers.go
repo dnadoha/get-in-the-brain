@@ -30,8 +30,33 @@ func notImplemented(w http.ResponseWriter) {
 }
 
 func (a *API) listTodos(w http.ResponseWriter, r *http.Request) {
+	done := r.URL.Query().Get("done")
 	todos := a.store.List()
-	writeJSON(w, http.StatusOK, todos)
+	switch done {
+	case "true":
+		completedTodos := make([]Todo, 0)
+		for _, todo := range todos {
+			if todo.Done {
+				completedTodos = append(completedTodos, todo)
+			}
+		}
+		writeJSON(w, http.StatusOK, completedTodos)
+		return
+	case "false":
+		incompleteTodos := make([]Todo, 0)
+		for _, todo := range todos {
+			if !todo.Done {
+				incompleteTodos = append(incompleteTodos, todo)
+			}
+		}
+		writeJSON(w, http.StatusOK, incompleteTodos)
+		return
+	case "":
+		writeJSON(w, http.StatusOK, todos)
+		return
+	default:
+		writeError(w, http.StatusBadRequest, "done must be true or false")
+	}
 }
 
 type createTodo struct {
